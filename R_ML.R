@@ -2,12 +2,14 @@ library(errors)
 library(progress)
 library(tictoc)
 library(readr)
-library(readr)
 tic("data_prep")
 library(pracma)
 library(readxl) 
 library("dplyr")
+library(tidyverse)
+library(plyr)
 library(fitdistrplus)
+library(data.table)
 #----------------------------Hommel----------------------------------------------------------------------------------------------------------------------------------
 library(fitdistrplus)
 # #ball_ront <- read.table("~/Library/Mobile Documents/com~apple~CloudDocs/Dokumenty/Projekty/NSMT/AI_GUM/Data/Hommel/Kula_ver2/ball_ront.txt", skip=2)
@@ -7316,7 +7318,214 @@ Rz<-round(as.numeric(mean(boot.r)),digits=2);
 Rz_uncert<-round(as.numeric(uncert),digits=2);
 
 write.table(data.frame(system_type, Ra, Ra_uncert, Rz, Rz_uncert, material, RONt, RONt_uncert, standard, F),file="/Users/DawidKucharski/Library/Mobile Documents/com~apple~CloudDocs/Dokumenty/Projekty/NSMT/AI_GUM/Data/input.txt", append=TRUE,sep=" ",col.names=FALSE,row.names=FALSE)
-toc()
+# ----------------------------------CCI_Ra_Rz--------------------------------
+folder <- "/Users/DawidKucharski/Library/Mobile Documents/com~apple~CloudDocs/Dokumenty/Projekty/NSMT/AI_GUM/Data/PW/CCI/"       
+# path to folder that holds multiple .csv files 
+
+file_list <- list.files(path=folder, pattern="*.csv")  
+# create list of all .csv files in folder
+for (i in 1:length(file_list)){ 
+  Ra<-assign(file_list[i],  
+             read.csv(paste(folder, file_list[i], sep=''), sep = ";")[1:1,14] 
+  )
+  if (Ra > 6) {
+    Ra = Ra/1000;
+  } 
+  Rz<-assign(file_list[i],  
+         read.csv(paste(folder, file_list[i], sep=''), sep = ";")[1:1,11] 
+  )
+if (Rz > 31) {
+     Rz = Rz/1000;
+}
+
+  x <- Ra
+  
+  Nx <- length(x) # number of data points in x
+  
+  P <- 0.95 # confidence level
+  R <- 10^5 # number of times to resample the data
+  
+  bLin <- 0.01 # linearity
+  bRep <- 0.01 # repeatability
+  bCal <- 0.005/2 # calibration error
+  bProbe <- 0.01 # Probe error 
+  
+  
+  boot.r <- numeric(R) # vector for r values
+  for (i in 1:R) {
+    boot.sample.x <- sample(x,size=Nx,replace=T)
+    
+    beta1x <- rnorm(n=1,mean=0,sd=bLin) # linearity
+    beta2x <- runif(n=1, min = 0, max = 0.1) # repeatability
+    beta3x <- rnorm(n=1,mean=0,sd=bCal) # calibration
+    beta4x <- bProbe # Probe error 
+    xs <- mean(boot.sample.x)+beta1x+beta2x+beta3x+beta4x
+    
+    boot.r[i] <- xs 
+  }
+  #hist(boot.r,xlab=(expression(Ra*" ["*mu*"m]")))
+  #mean(boot.r)
+  quant<-quantile(boot.r, probs = c((1-P)/2,(1+P)/2))
+  uncert<-mean(boot.r)-quant[[1]]
+  
+  e<-set_errors(mean(boot.r), uncert)
+  options(errors.notation = "plus-minus") 
+  RONt_uncert<-round(as.numeric(NA),digits=2);
+  
+  
+  system_type<-"CCI";
+  Ra<-round(as.numeric(mean(boot.r)),digits=2);
+  Ra_uncert<-round(as.numeric(uncert),digits=2);
+  material<-as.numeric(1);
+  standard<-as.numeric(1);
+  F<-as.numeric(1);
+  RONt<-round(as.numeric(NA),digits=2);
+  
+  
+  x <- Rz
+  
+  Nx <- length(x) # number of data points in x
+  
+  P <- 0.95 # confidence level
+  R <- 10^5  # number of times to resample the data
+  
+  bLin <- 0.01 # linearity
+  bRep <- 0.01 # repeatability
+  bCal <- 0.005/2 # calibration error
+  bProbe <- 0.01 # Probe error 
+  
+  
+  boot.r <- numeric(R) # vector for r values
+  for (i in 1:R) {
+    boot.sample.x <- sample(x,size=Nx,replace=T)
+    
+    beta1x <- rnorm(n=1,mean=0,sd=bLin) # linearity
+    beta2x <- runif(n=1, min = 0, max = 0.1) # repeatability
+    beta3x <- rnorm(n=1,mean=0,sd=bCal) # calibration
+    beta4x <- bProbe # Probe error 
+    xs <- mean(boot.sample.x)+beta1x+beta2x+beta3x+beta4x
+    
+    boot.r[i] <- xs 
+  }
+  #hist(boot.r,xlab=(expression(Rz*" ["*mu*"m]")))
+  #mean(boot.r)
+  quant<-quantile(boot.r, probs = c((1-P)/2,(1+P)/2))
+  uncert<-mean(boot.r)-quant[[1]]
+  
+  e<-set_errors(mean(boot.r), uncert)
+  options(errors.notation = "plus-minus") 
+ 
+  Rz<-round(as.numeric(mean(boot.r)),digits=2);
+  Rz_uncert<-round(as.numeric(uncert),digits=2);
+  
+  write.table(data.frame(system_type, Ra, Ra_uncert, Rz, Rz_uncert, material, RONt, RONt_uncert, standard, F),file="/Users/DawidKucharski/Library/Mobile Documents/com~apple~CloudDocs/Dokumenty/Projekty/NSMT/AI_GUM/Data/input.txt", append=TRUE,sep=" ",col.names=FALSE,row.names=FALSE)
+ 
+} 
+# ----------------------------------PGI_Ra_Rz--------------------------------
+folder <- "/Users/DawidKucharski/Library/Mobile Documents/com~apple~CloudDocs/Dokumenty/Projekty/NSMT/AI_GUM/Data/PW/PGI/"       
+# path to folder that holds multiple .csv files 
+
+file_list <- list.files(path=folder, pattern="*.csv")  
+
+for (i in 1:length(file_list)){ 
+  Ra<-assign(file_list[i],  
+             read.csv(paste(folder, file_list[i], sep=''), sep = ";")[1:1,1] 
+  )
+  if (Ra > 6) {
+    Ra = Ra/1000;
+  } 
+  Rz<-assign(file_list[i],  
+             read.csv(paste(folder, file_list[i], sep=''), sep = ";")[1:1,2] 
+  )
+  if (Rz > 31) {
+    Rz = Rz/1000;
+  }
+
+  x <- Ra
+  
+  Nx <- length(x) # number of data points in x
+  
+  P <- 0.95 # confidence level
+  R <- 10^5 # number of times to resample the data
+  
+  bLin <- 0.01 # linearity
+  bRep <- 0.01 # repeatability
+  bCal <- 0.005/2 # calibration error
+  bProbe <- 0.01 # Probe error 
+  
+  
+  boot.r <- numeric(R) # vector for r values
+  for (i in 1:R) {
+    boot.sample.x <- sample(x,size=Nx,replace=T)
+    
+    beta1x <- rnorm(n=1,mean=0,sd=bLin) # linearity
+    beta2x <- runif(n=1, min = 0, max = 0.1) # repeatability
+    beta3x <- rnorm(n=1,mean=0,sd=bCal) # calibration
+    beta4x <- bProbe # Probe error 
+    xs <- mean(boot.sample.x)+beta1x+beta2x+beta3x+beta4x
+    
+    boot.r[i] <- xs 
+  }
+  #hist(boot.r,xlab=(expression(Ra*" ["*mu*"m]")))
+  #mean(boot.r)
+  quant<-quantile(boot.r, probs = c((1-P)/2,(1+P)/2))
+  uncert<-mean(boot.r)-quant[[1]]
+  
+  e<-set_errors(mean(boot.r), uncert)
+  options(errors.notation = "plus-minus") 
+  RONt_uncert<-round(as.numeric(NA),digits=2);
+  
+  
+  system_type<-"PGI";
+  Ra<-round(as.numeric(mean(boot.r)),digits=2);
+  Ra_uncert<-round(as.numeric(uncert),digits=2);
+  material<-as.numeric(1);
+  standard<-as.numeric(1);
+  F<-as.numeric(1);
+  RONt<-round(as.numeric(NA),digits=2);
+  
+  
+  x <- Rz
+  
+  Nx <- length(x) # number of data points in x
+  
+  P <- 0.95 # confidence level
+  R <- 10^5  # number of times to resample the data
+  
+  bLin <- 0.01 # linearity
+  bRep <- 0.01 # repeatability
+  bCal <- 0.005/2 # calibration error
+  bProbe <- 0.01 # Probe error 
+  
+  
+  boot.r <- numeric(R) # vector for r values
+  for (i in 1:R) {
+    boot.sample.x <- sample(x,size=Nx,replace=T)
+    
+    beta1x <- rnorm(n=1,mean=0,sd=bLin) # linearity
+    beta2x <- runif(n=1, min = 0, max = 0.1) # repeatability
+    beta3x <- rnorm(n=1,mean=0,sd=bCal) # calibration
+    beta4x <- bProbe # Probe error 
+    xs <- mean(boot.sample.x)+beta1x+beta2x+beta3x+beta4x
+    
+    boot.r[i] <- xs 
+  }
+  #hist(boot.r,xlab=(expression(Rz*" ["*mu*"m]")))
+  #mean(boot.r)
+  quant<-quantile(boot.r, probs = c((1-P)/2,(1+P)/2))
+  uncert<-mean(boot.r)-quant[[1]]
+  
+  e<-set_errors(mean(boot.r), uncert)
+  options(errors.notation = "plus-minus") 
+  
+  Rz<-round(as.numeric(mean(boot.r)),digits=2);
+  Rz_uncert<-round(as.numeric(uncert),digits=2);
+  
+  write.table(data.frame(system_type, Ra, Ra_uncert, Rz, Rz_uncert, material, RONt, RONt_uncert, standard, F),file="/Users/DawidKucharski/Library/Mobile Documents/com~apple~CloudDocs/Dokumenty/Projekty/NSMT/AI_GUM/Data/input.txt", append=TRUE,sep=" ",col.names=FALSE,row.names=FALSE)
+  
+} 
+
+toc{}
 # #------------------------------MetrologyPackage--------------------------
 # #sample area
 # L<-5*2.54 #cm
@@ -7338,10 +7547,10 @@ toc()
 # #data_row <- data[sample(1:nrow(data)), ]     # Randomly reorder rows
 # #data_row                                     # Print updated data
 # library("readr")
-my_data <- read.table("/Users/DawidKucharski/Library/Mobile Documents/com~apple~CloudDocs/Dokumenty/Projekty/NSMT/AI_GUM/Data/input.txt",header = TRUE, sep = " ",colClasses=c("factor","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric"))
-my_data <- my_data[sample(1:nrow(my_data)), ]
-print(my_data)
-length(my_data$system_type)
+#my_data <- read.table("/Users/DawidKucharski/Library/Mobile Documents/com~apple~CloudDocs/Dokumenty/Projekty/NSMT/AI_GUM/Data/input.txt",header = TRUE, sep = " ",colClasses=c("factor","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric"))
+#my_data <- my_data[sample(1:nrow(my_data)), ]
+#print(my_data)
+#length(my_data$system_type)
 # library(truncnorm)
 # 
 # 
