@@ -8,3 +8,9 @@ Funding: A grant supported this work: A project entitled: "Analysis of the possi
 
 Projekt pt. „Analiza możliwości zastosowania sztucznej inteligencji w pomiarach nierówności powierzchni” finansowany przez Ministerstwo Edukacji i Nauki Programu Polska Metrologia Nr PM/SP/0021/2021 z dnia 29.06.2022.
 -------------------------------------------------------------------------------------------------------------------------------
+
+
+The project is continued under the grant ”Application of artificial intelligence in surface irregularities measurements”, financed by the Ministry of Education and Science of the program: Polish Metrology II PM-II/SP/0104/2024/02 of 01.02.2024
+Projekt pt. „Zastosowanie sztucznej inteligencji w pomiarach nierówności powierzchni” finansowany przez Ministerstwo Nauki i Szkolnictwa Wyższego w ramach programu Polska Metrologia 2 Nr PM-II/SP/0104/2024/02 z dnia 01.02.2024.
+
+A new Python release has been provided.
